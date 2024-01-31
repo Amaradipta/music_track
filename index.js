@@ -4,6 +4,8 @@ const User = require('./models/User');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const Song = require('./models/Song');
+const Artist = require('./models/Artist');
+const Genre = require('./models/Genre');
 const verifyToken = require('./tokenVerification');
 
 const app = express();
@@ -40,7 +42,7 @@ const authenticateJWT = async (req, res, next) => {
 
 
 // Apply middleware for routes that require authentication
-app.use(['/users', '/songs'], authenticateJWT);
+app.use(['/users'], authenticateJWT);
 
 // Sync the models with the database
 sequelize.sync()
@@ -146,7 +148,6 @@ app.delete('/users/:userId', async (req, res) => {
 });
 
 
-
 app.get('/song', async(req, res) => {
   const songs = await Song.findAll();
   res.json(songs);
@@ -226,6 +227,176 @@ app.delete('/song/:songId', async (req, res) => {
     await song.destroy();
 
     res.status(204).json({ message: 'Song successfully deleted' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// Retrieve all genres
+app.get('/genres', async (req, res) => {
+  const genres = await Genre.findAll();
+  res.json(genres);
+});
+
+// Retrieve a single genre by ID
+app.get('/genres/:genreId', async (req, res) => {
+  try {
+    const genreId = req.params.genreId;
+    const genre = await Genre.findByPk(genreId);
+
+    if (genre) {
+      res.json(genre);
+    } else {
+      res.status(404).json({ error: 'Genre not found' });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// Create a new genre
+app.post('/genres', async (req, res) => {
+  try {
+    const { genreName } = req.body;
+    const newGenre = await Genre.create({
+      genreName,
+    });
+    res.status(201).json(newGenre);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// Update a genre by ID
+app.put('/genres/:genreId', async (req, res) => {
+  try {
+    const genreId = req.params.genreId;
+    const { genreName } = req.body;
+
+    // Find the genre by ID
+    const genre = await Genre.findByPk(genreId);
+
+    if (!genre) {
+      return res.status(404).json({ error: 'Genre not found' });
+    }
+
+    // Update genre attributes
+    genre.genreName = genreName || genre.genreName;
+
+    // Save the updated genre
+    await genre.save();
+
+    // Send a success message with the updated genre
+    res.status(200).json({ message: 'Genre successfully updated', genre });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+app.delete('/genres/:genreId', async (req, res) => {
+  try {
+    const genreId = req.params.genreId;
+    // Find the genre by ID
+    const genre = await Genre.findByPk(genreId);
+
+    if (!genre) {
+      return res.status(404).json({ error: 'Genre not found' });
+    }
+
+    // Delete the genre
+    await genre.destroy();
+
+    res.status(204).json({ message: 'Genre successfully deleted' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// Retrieve all artists
+app.get('/artists', async (req, res) => {
+  const artists = await Artist.findAll();
+  res.json(artists);
+});
+
+// Retrieve a single artist by ID
+app.get('/artists/:artistId', async (req, res) => {
+  try {
+    const artistId = req.params.artistId;
+    const artist = await Artist.findByPk(artistId);
+
+    if (artist) {
+      res.json(artist);
+    } else {
+      res.status(404).json({ error: 'Artist not found' });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// Create a new artist
+app.post('/artists', async (req, res) => {
+  try {
+    const { name, artistURL } = req.body;
+    const newArtist = await Artist.create({
+      name,
+      artistURL,
+    });
+    res.status(201).json(newArtist);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// Update an artist by ID
+app.put('/artists/:artistId', async (req, res) => {
+  try {
+    const artistId = req.params.artistId;
+    const { name, artistURL } = req.body;
+
+    // Find the artist by ID
+    const artist = await Artist.findByPk(artistId);
+
+    if (!artist) {
+      return res.status(404).json({ error: 'Artist not found' });
+    }
+
+    // Update artist attributes
+    artist.name = name || artist.name;
+    artist.artistURL = artistURL || artist.artistURL;
+
+    // Save the updated artist
+    await artist.save();
+
+    // Send a success message with the updated artist
+    res.status(200).json({ message: 'Artist successfully updated', artist });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+app.delete('/artists/:artistId', async (req, res) => {
+  try {
+    const artistId = req.params.artistId;
+    // Find the artist by ID
+    const artist = await Artist.findByPk(artistId);
+
+    if (!artist) {
+      return res.status(404).json({ error: 'Artist not found' });
+    }
+
+    // Delete the artist
+    await artist.destroy();
+
+    res.status(204).json({ message: 'Artist successfully deleted' });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Internal Server Error' });
